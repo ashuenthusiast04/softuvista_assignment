@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add a New Customer</title>
+</head>
+<body>
+    <h1>Add a New Customer</h1>
+    <button><a href="customer_list.html">Back to Customer List</a></button>
+
+    <form id="add-customer-form">
+        <label for="first_name">First Name:</label>
+        <input type="text" id="first_name" name="first_name" required><br><br>
+
+        <label for="last_name">Last Name:</label>
+        <input type="text" id="last_name" name="last_name" required><br><br>
+
+        <label for="street">Street:</label>
+        <input type="text" id="street" name="street" required><br><br>
+        <label for="address">Address:</label>
+        <input type="text" id="address" name="address" required><br><br>
+        <label for="city">City:</label>
+        <input type="text" id="city" name="city" required><br><br>
+        <label for="email">Email:</label>
+        <input type="text" id="email" name="email" required><br><br>
+        <label for="phone">Phone:</label>
+        <input type="text" id="phone" name="phone" required><br><br>
+
+        <!-- Add more fields for address, city, state, email, and phone -->
+
+        <button type="button" onclick="createCustomer()">Add Customer</button>
+    </form>
+
+    <div id="add-customer-response"></div>
+
+   <!-- ... (Previous HTML code) ... -->
+
+<script>
+    function createCustomer() {
+        // Get the Bearer token from sessionStorage (set after successful login)
+        const token = sessionStorage.getItem('token');
+
+        if (!token) {
+            // Redirect to the login screen if the token is missing
+            window.location.href = 'index.html';
+        }
+
+        const first_name = document.getElementById('first_name').value;
+        const last_name = document.getElementById('last_name').value;
+        const street = document.getElementById('street').value;
+        const address = document.getElementById('address').value;
+         const city = document.getElementById('city').value;
+        const  email= document.getElementById('email').value;
+        const phone = document.getElementById('phone').value;
+
+        // Validate input fields
+        if (!first_name || !last_name) {
+            document.getElementById('add-customer-response').innerText = 'First Name and Last Name are mandatory fields.';
+            return;
+        }
+
+        // Make a POST request to create a new customer
+        fetch('https://qa2.sunbasedata.com/sunbase/portal/api/assignment.jsp?cmd=create', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                "first_name": first_name,
+                "last_name": last_name,
+                "street": street,
+                "address":address,
+                "city":city,
+                "email":email,
+                "phone":phone,
+
+                
+            })
+        })
+        .then(response => {
+            if (response.status === 201) {
+                document.getElementById('add-customer-response').innerText = 'Customer created successfully.';
+                // Clear input fields
+                document.getElementById('first_name').value = '';
+                document.getElementById('last_name').value = '';
+                document.getElementById('street').value = '';
+                document.getElementById('address').value = '';
+                document.getElementById('city').value = '';
+                document.getElementById('email').value = '';
+                document.getElementById('phone').value = '';
+
+            } else if (response.status === 401) {
+                throw new Error('Authentication failed. Please log in again.');
+            } else if (response.status === 400) {
+                throw new Error('Failed to create customer. Please check your input data.');
+            } else {
+                throw new Error('Failed to create customer.');
+            }
+        })
+        .catch(error => {
+            document.getElementById('add-customer-response').innerText = error.message;
+        });
+    }
+</script>
+
+<!-- ... (Remaining HTML code) ... -->
+
+</body>
+</html>

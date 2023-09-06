@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Customer List</title>
+</head>
+<body>
+    <h1>Customer List</h1>
+    <button><a href="index.html">Logout</a></button>
+
+    <table border="1">
+        <tr>
+            <th>First Name</th>
+            <th>Last Name</th>
+            <th>Street</th>
+            <th>Address</th>
+            <th>City</th>
+            <th>State</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Action</th>
+        </tr>
+    </table>
+
+ 
+
+<script>
+    
+    // Function to delete a customer by UUID
+    function deleteCustomer(uuid) {
+        // Get the Bearer token from sessionStorage
+        const token = sessionStorage.getItem('token');
+
+        if (!token) {
+            // Redirect to the login screen if the token is missing
+            window.location.href = 'index.html';
+        }
+
+        // Make a POST request to delete the customer
+        fetch('https://qa2.sunbasedata.com/sunbase/portal/api/assignment.jsp?cmd=delete&uuid=' + uuid, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        })
+        .then(response => {
+            if (response.status === 200) {
+                // Successful deletion, you may want to update the table or provide a success message
+                fetchCustomerList(); // Refresh the customer list after deletion
+            } else if (response.status === 401) {
+                throw new Error('Authentication failed. Please log in again.');
+            } else if (response.status === 400) {
+                throw new Error('Failed to delete customer. Customer not found.');
+            } else {
+                throw new Error('Failed to delete customer.');
+            }
+        })
+        .catch(error => {
+            document.getElementById('customer-list-response').innerText = error.message;
+        });
+    }
+
+
+    // Function to fetch and display the list of customers
+    function fetchCustomerList() {
+        // Get the Bearer token from sessionStorage (set after successful login)
+        const token = sessionStorage.getItem('token');
+
+        if (!token) {
+            // Redirect to the login screen if the token is missing
+            window.location.href = 'index.html';
+        }
+
+        // Make a GET request to fetch the list of customers
+        fetch('https://qa2.sunbasedata.com/sunbase/portal/api/assignment.jsp?cmd=get_customer_list', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        })
+        .then(response => {
+            if (response.status === 200) {
+                return response.json();
+            } else if (response.status === 401) {
+                throw new Error('Authentication failed. Please log in again.');
+            } else {
+                throw new Error('Failed to fetch customer list.');
+            }
+        })
+        .then(data => {
+            const customerTable = document.querySelector('table');
+            const tbody = customerTable.querySelector('tbody');
+
+            // Clear existing table rows
+            tbody.innerHTML = '';
+
+            // Populate the table with customer data
+            data.forEach(customer => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${customer.first_name}</td>
+                    <td>${customer.last_name}</td>
+                    <td>${customer.street}</td>
+                    <td>${customer.address}</td>
+                    <td>${customer.city}</td>
+                    <td>${customer.state}</td>
+                    <td>${customer.email}</td>
+                    <td>${customer.phone}</td>
+                    <td><button onclick="deleteCustomer('${customer.uuid}')">Delete</button></td>
+                `;
+                tbody.appendChild(row);
+            });
+        })
+        .catch(error => {
+            document.getElementById('customer-list-response').innerText = error.message;
+        });
+    }
+
+    // Call the fetchCustomerList function when the page loads
+    window.onload = fetchCustomerList;
+</script>
+
+
+</body>
+</html>
